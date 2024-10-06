@@ -39,11 +39,14 @@ public class NPFMap
                         int ii = i + ca.begin.x - begin.x;
                         int jj = j + ca.begin.y - begin.y;
                         if (ii > 0 && (ii + 1) < size && jj > 0 && (jj + 1) < size) {
-                            old.cells[i][j] = cells[ii][jj].val;
+                            old.boolMask[i][j] = (cells[ii][jj].val != 0);
+                            old.boolMask[i][j] = cells[ii][jj].fullVal.isBlocked();
+                            if (ca.boolMask[i][j]) {
+                                if (cells[ii][jj].val != 1) {
+                                    cells[ii][jj].val = (ca.boolMask[i][j]) ? (short) 1 : (short) 0;
+                                }
 
-                            if (ca.cells[i][j] != 0) {
-                                if (cells[ii][jj].val != 1)
-                                    cells[ii][jj].val = ca.cells[i][j];
+                                cells[ii][jj].fullVal.cumulate(CellType.Blocked);
                                 cells[ii][jj].content.add(gob.id);
                             }
                         }
@@ -62,16 +65,16 @@ public class NPFMap
                     int ii = i + ca.begin.x - begin.x;
                     int jj = j + ca.begin.y - begin.y;
                     if (ii > 0 && (ii + 1) < size && jj > 0 && (jj + 1) < size) {
-                        cells[ii][jj].val = ca.cells[i][j];
+                        cells[ii][jj].val = (ca.boolMask[i][j])? (short)1 : (short)0;
                         //TODO placeable vs passable
-                        cells[ii][jj].fullVal.force((ca.cells[i][j] == 0) ? CellType.Placeable : CellType.Blocked);
+                        cells[ii][jj].fullVal.force((!ca.boolMask[i][j]) ? CellType.Placeable : CellType.Blocked);
                     }
                 }
         }
     }
 
     public enum  CellType {
-        Land((byte) 0, (byte) -1, -1),
+        NonWater((byte) 0, (byte) -1, -1),
         Bog((byte) 1, (byte) -1, -1),
         Shallow((byte) 2, (byte) -1, -1),
         ShallowOcean((byte) 3, (byte) -1, -1),
@@ -84,10 +87,11 @@ public class NPFMap
         Blocked((byte) -1, (byte) 2, -1),
         Forbidden((byte) -1, (byte) 3, -1),
 
+        UnknownFloor((byte) -1, (byte) -1, 1),
         PavedFloor((byte) -1, (byte) -1, 1),
         GrassFloor((byte) -1, (byte) -1, 0.8),
         ForestFloor((byte) -1, (byte) -1, 0.6),
-        SubmergedWalk((byte) -1, (byte) -1, 0.2),
+        SubmergedFloor((byte) -1, (byte) -1, 0.2),
 
         Default((byte) 0, (byte) 0, 1);
 
@@ -98,9 +102,14 @@ public class NPFMap
         }
 
         void cumulate(CellType other) {
-            if (other.landType != -1)
+            if (other.landType != -1) {
                 if (landType < other.landType)
                     landType = other.landType;
+                if (other.landType > 0)
+                    includeWater = true;
+                if (other.landType == 0)
+                    includeLand = true;
+            }
             if (other.obstructionState != -1)
                 if (obstructionState < other.obstructionState)
                     obstructionState = other.obstructionState;
@@ -117,6 +126,8 @@ public class NPFMap
                 speedK = other.speedK;
         }
 
+        private boolean includeWater = false;
+        private boolean includeLand = false;
         private byte landType;
         //0 walkable
         //1 bog
@@ -136,6 +147,7 @@ public class NPFMap
         public short pfColour = -1;
         //0 traversable
         //1
+        private boolean pfVisited = false;
 
         public boolean isPfVisited() {
             return pfVisited;
@@ -146,10 +158,8 @@ public class NPFMap
         }
 
 
-        private boolean pfVisited = false;
-
         public boolean isPlace_able() {
-            return ((landType == 0) && (obstructionState < 1));
+            return ((landType == 0) && (obstructionState < 1) && !includeWater);
         }
 
         public boolean isWalk_able() {
@@ -161,15 +171,19 @@ public class NPFMap
         }
 
         public boolean isSail_able() {
-            return ((landType >= 2) && (landType <= 6) && (obstructionState < 2));
+            return ((landType >= 2) && (landType <= 6) && (obstructionState < 2) && !includeLand);
+        }
+
+        public boolean isDangerWaters() {
+            return (landType == 6);
         }
 
         public boolean isBlockedByMajorObject() {
-            return (obstructionState == 2);
+            return (obstructionState == 3);
         }
 
         public boolean isBlockedByHitbox() {
-            return (obstructionState == 3);
+            return (obstructionState == 2);
         }
 
         public boolean isBlocked() {
@@ -202,31 +216,35 @@ public class NPFMap
         Coord2d a = new Coord2d(Math.min(src.x, tgt.x), Math.min(src.y, tgt.y));
         Coord2d b = new Coord2d(Math.max(src.x, tgt.x), Math.max(src.y, tgt.y));
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
-        dsize = Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
+        dsize = Math.max(8, ((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
         size = 2 * dsize + 1;
-        if(dsize>120) {
+        if (dsize > 120) {
             NUtils.getGameUI().error("Unable to build grid of required size");
             throw new InterruptedException();
         }
 
         cells = new Cell[size][size];
-        begin = center.sub(dsize,dsize);
-        end = center.add(dsize,dsize);
+        begin = center.sub(dsize, dsize);
+        end = center.add(dsize, dsize);
         for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                cells[i][j] = new Cell( begin.add(i,j));
-                if(i == 0 || j == 0 || i == size-1 || j == size-1)
-                    cells[i][j].val=2;
+            for (int j = 0; j < size; j++) {
+                cells[i][j] = new Cell(begin.add(i, j));
+                if (i == 0 || j == 0 || i == size - 1 || j == size - 1) {
+                    cells[i][j].val = 2;
+                    cells[i][j].fullVal.force(CellType.Forbidden);
+                }
             }
-        }
     }
 
     public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)throws InterruptedException
     {
         this(src,dst,mul);
-        this.waterMode = waterMode;
+        if(waterMode) {
+            this.waterMode = true;
+            for (int i = 1; i < (size-1); i++)
+                for (int j = 1; j < (size-1); j++)
+                    cells[i][j].fullVal.force(CellType.Bog);
+        }
     }
 
     public Coord getBegin()
@@ -313,7 +331,7 @@ public class NPFMap
                     int jj = j + ca.begin.y - begin.y;
                     if (ii > 0 && ii < size && jj > 0 && jj < size)
                     {
-                        if(ca.cells[i][j] != 0 && cells[ii][jj].val !=0)
+                        if(ca.boolMask[i][j] && cells[ii][jj].val !=0)
                         {
                             result.add(new Coord(ii,jj));
                         }

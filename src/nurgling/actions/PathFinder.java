@@ -300,7 +300,7 @@ public class PathFinder implements Action {
                     int jj = j + ca.begin.y - pfmap.begin.y;
                     Coord npfpos = new Coord(ii, jj);
                     if (ii > 0 && ii < pfmap.size && jj > 0 && jj < pfmap.size) {
-                        if (ca.cells[i][j] != 0) {
+                        if (ca.boolMask[i][j]) {
                             for (int d = 0; d < 4; d++) {
                                 Coord test_coord = npfpos.add(Coord.uecw[d]);
                                 if (test_coord.x < pfmap.size && test_coord.x >= 0 && test_coord.y < pfmap.size && test_coord.y >= 0)
