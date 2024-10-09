@@ -34,6 +34,8 @@ import java.awt.event.KeyEvent;
 import java.awt.image.WritableRaster;
 import haven.render.Location;
 import static haven.Inventory.invsq;
+
+import mapv4.MappingClient;
 import nurgling.*;
 import nurgling.conf.*;
 import nurgling.widgets.*;
@@ -247,11 +249,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	}
     }
 
-	private static NGameUI gameUI = null;
-    public static NGameUI getInstance(){
-		return gameUI;
-	}
-
     @RName("gameui")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -260,8 +257,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    String genus = "";
 	    if(args.length > 2)
 		genus = (String)args[2];
-		gameUI = new NGameUI(chrid, plid, genus, (NUI)ui);
-	    return(gameUI);
+	    return(new NGameUI(chrid, plid, genus, (NUI)ui));
 	}
     }
 	NResizableWidget chatwdg;
@@ -358,7 +354,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	savewndpos();
 	Debug.log = new java.io.PrintWriter(System.err);
 	ui.cons.clearout();
-	gameUI = null;
 	super.dispose();
     }
 
@@ -589,6 +584,14 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		MapFile file;
 		try {
 		    file = MapFile.load(mapstore, mapfilename());
+			if((Boolean) NConfig.get(NConfig.Key.autoMapper)) {
+				MappingClient.getInstance().ProcessMap(file, (m) -> {
+					if(m instanceof MapFile.PMarker) {
+						return (Boolean) NConfig.get(NConfig.Key.unloadgreen) && ((MapFile.PMarker)m).color.equals(Color.GREEN);
+					}
+					return true;
+				});
+			}
 		} catch(java.io.IOException e) {
 		    /* XXX: Not quite sure what to do here. It's
 		     * certainly not obvious that overwriting the
