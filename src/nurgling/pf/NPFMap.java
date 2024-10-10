@@ -12,64 +12,57 @@ public class NPFMap
 {
     public boolean waterMode = false;
     public Cell[][] cells;
-    // 1 hitbox
     // 0 have path
+    // 1 hitbox
     // 2 unpathable tiles
     // 4 pf been here
     // 7 approach point (marked blue)
     // 8 pf line
     // 9 pf turn
-    public Coord begin;
-    Coord end;
-    int dsize;
+
+    private final Coord begin;
+    private final Coord end;
+    public int dsize;
     public int size;
     long currentTransport = -1;
 
-    public CellsArray addGob(Gob gob) {
+    private Cell[][] stash_cells;
+    private Coord stash_begin;
+    private Coord stash_size;
+
+    public void addGob(Gob gob) {
         CellsArray ca;
-
         if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player() != null && gob.id != NUtils.player().id && gob.getattr(Following.class) == null) {
-            CellsArray old = new CellsArray(ca.x_len, ca.y_len);
-            old.begin = ca.begin;
-            old.end = ca.end;
-            if (ca.end.x >= begin.x && ca.begin.x <= end.x &&
-                    ca.end.y >= begin.y && ca.begin.y <= end.y) {
-                for (int i = 0; i < ca.x_len; i++)
-                    for (int j = 0; j < ca.y_len; j++) {
-                        int ii = i + ca.begin.x - begin.x;
-                        int jj = j + ca.begin.y - begin.y;
-                        if (ii > 0 && (ii + 1) < size && jj > 0 && (jj + 1) < size) {
-                            old.boolMask[i][j] = (cells[ii][jj].val != 0);
-                            old.boolMask[i][j] = cells[ii][jj].fullVal.isBlocked();
-                            if (ca.boolMask[i][j]) {
-                                if (cells[ii][jj].val != 1) {
-                                    cells[ii][jj].val = (ca.boolMask[i][j]) ? (short) 1 : (short) 0;
-                                }
-
-                                cells[ii][jj].fullVal.cumulate(CellType.Blocked);
-                                cells[ii][jj].content.add(gob.id);
-                            }
-                        }
+            int ulx = Math.max(Math.min(ca.begin.x, ca.end.x), begin.x) - begin.x;
+            int uly = Math.max(Math.min(ca.begin.y, ca.end.y), begin.y) - begin.y;
+            int szx = Math.min(Math.max(ca.begin.x, ca.end.x), end.x) - begin.x - ulx + 1;
+            int szy = Math.min(Math.max(ca.begin.y, ca.end.y), end.y) - begin.y - uly + 1;
+            for (int i = 0; i < szx; i++)
+                for (int j = 0; j < szy; j++)
+                    if (ca.boolMask[i][j]) {
+                        cells[i + ulx][j + uly].fullVal.cumulate(CellType.Blocked);
+                        cells[i + ulx][j + uly].content.add(gob.id);
                     }
-            }
-            return old;
         }
-        return null;
     }
 
-    public void setCellArray(CellsArray ca) {
-        if (ca.end.x >= begin.x && ca.begin.x <= end.x &&
-                ca.end.y >= begin.y && ca.begin.y <= end.y) {
-            for (int i = 0; i < ca.x_len; i++)
-                for (int j = 0; j < ca.y_len; j++) {
-                    int ii = i + ca.begin.x - begin.x;
-                    int jj = j + ca.begin.y - begin.y;
-                    if (ii > 0 && (ii + 1) < size && jj > 0 && (jj + 1) < size) {
-                        cells[ii][jj].val = (ca.boolMask[i][j])? (short)1 : (short)0;
-                        //TODO placeable vs passable
-                        cells[ii][jj].fullVal.force((!ca.boolMask[i][j]) ? CellType.Placeable : CellType.Blocked);
-                    }
-                }
+    public void push_segment(Coord ul, Coord br) {
+        stash_begin = Coord.of(Math.max(Math.min(ul.x, br.x), begin.x) - begin.x, Math.max(Math.min(ul.y, br.y), begin.y) - begin.y);
+        stash_size = Coord.of(Math.min(Math.max(ul.x, br.x), end.x) - begin.x + 1, Math.min(Math.max(ul.y, br.y), end.y) - begin.y + 1).sub(stash_begin);
+        if ((stash_size.x < 0) || (stash_size.y < 0))
+            stash_begin = null;
+        else {
+            stash_cells = new Cell[stash_size.x][stash_size.y];
+            for (int ix = stash_begin.x; ix < stash_size.x; ix++)
+                System.arraycopy(cells[ix], stash_begin.y, stash_cells[ix - stash_begin.x], 0, stash_size.y);
+        }
+    }
+
+    public void pull_segment() {
+        if (stash_begin != null) {
+            for (int ix = stash_begin.x; ix < stash_size.x; ix++)
+                System.arraycopy(stash_cells[ix - stash_begin.x], 0, cells[ix], stash_begin.y, stash_size.y);
+            stash_begin = null;
         }
     }
 
@@ -109,13 +102,18 @@ public class NPFMap
                     includeWater = true;
                 if (other.landType == 0)
                     includeLand = true;
+                caLayed = true;
             }
-            if (other.obstructionState != -1)
+            if (other.obstructionState != -1) {
                 if (obstructionState < other.obstructionState)
                     obstructionState = other.obstructionState;
-            if (other.speedK != -1)
+                caLayed = true;
+            }
+            if (other.speedK != -1) {
                 if (speedK > other.speedK)
                     speedK = other.speedK;
+                caLayed = true;
+            }
         }
         void force(CellType other) {
             if (other.landType != -1)
@@ -128,6 +126,8 @@ public class NPFMap
 
         private boolean includeWater = false;
         private boolean includeLand = false;
+        private boolean pfVisited = false;
+        private boolean caLayed = false;
         private byte landType;
         //0 walkable
         //1 bog
@@ -147,16 +147,18 @@ public class NPFMap
         public short pfColour = -1;
         //0 traversable
         //1
-        private boolean pfVisited = false;
+
 
         public boolean isPfVisited() {
             return pfVisited;
         }
-
-        public void visitedByPf() {
-            this.pfVisited = true;
+        public boolean isCALayed() {
+            return caLayed;
         }
 
+        public void pfVisit() {
+            this.pfVisited = true;
+        }
 
         public boolean isPlace_able() {
             return ((landType == 0) && (obstructionState < 1) && !includeWater);
@@ -212,13 +214,13 @@ public class NPFMap
 
 
 
-    public NPFMap(Coord2d src, Coord2d tgt, int mul) throws InterruptedException {
+    public NPFMap(Coord2d src, Coord2d tgt, double mul) throws InterruptedException {
         Coord2d a = new Coord2d(Math.min(src.x, tgt.x), Math.min(src.y, tgt.y));
         Coord2d b = new Coord2d(Math.max(src.x, tgt.x), Math.max(src.y, tgt.y));
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
-        dsize = Math.max(8, ((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
+        dsize = Math.max(8, (int) Math.ceil(b.dist(a) * mul / MCache.tilehsz.x));
         size = 2 * dsize + 1;
-        if (dsize > 120) {
+        if (dsize > 160) {
             NUtils.getGameUI().error("Unable to build grid of required size");
             throw new InterruptedException();
         }
@@ -229,92 +231,74 @@ public class NPFMap
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++) {
                 cells[i][j] = new Cell(begin.add(i, j));
-                if (i == 0 || j == 0 || i == size - 1 || j == size - 1) {
-                    cells[i][j].val = 2;
+                if (i == 0 || j == 0 || i == (size - 1) || j == (size - 1))
                     cells[i][j].fullVal.force(CellType.Forbidden);
-                }
             }
     }
 
-    public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)throws InterruptedException
-    {
-        this(src,dst,mul);
-        if(waterMode) {
-            this.waterMode = true;
-            for (int i = 1; i < (size-1); i++)
-                for (int j = 1; j < (size-1); j++)
-                    cells[i][j].fullVal.force(CellType.Bog);
-        }
-    }
-
-    public Coord getBegin()
+    public final Coord getBegin()
     {
         return begin;
     }
 
-    public Coord getEnd()
+    public final Coord getEnd()
     {
         return end;
     }
 
-    public Cell[][] getCells()
+    public final Cell[][] getCells()
     {
         return cells;
     }
 
-    public int getSize()
+    public final int getSize()
     {
         return size;
     }
 
-    public void build()
-    {
-        if(NUtils.playerID()!=-1) {
+    public void build() {
+        if (NUtils.playerID() != -1) {
             Following fl = NUtils.player().getattr(Following.class);
-            if(fl!= null)
-            {
+            if (fl != null)
                 currentTransport = fl.tgt;
-            }
         }
-        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
-        {
-
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
-            {
-                if(gob.id!=currentTransport)
+                if (gob.id != currentTransport)
                     addGob(gob);
-            }
         }
-        for (int i = 0; i < size; i += 1)
-        {
-            for (int j = 0; j < size; j += 1)
-            {
 
-                if (cells[i][j].val == 0)
-                {
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                if (!cells[i][j].fullVal.isCALayed()) {
+
+
                     ArrayList<Coord> cand = new ArrayList<>();
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x, MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x, -MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x, -MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x, MCache.tileqsz.y))).div(MCache.tilesz).floor());
 
-                    for(Coord c : cand) {
+                    for (Coord c : cand) {
                         String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(c));
-                        if(!waterMode) {
-                            if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
+                        if (!waterMode) {
+                            if (name != null && (name.startsWith("gfx/tiles/cave") ||
+                                    name.startsWith("gfx/tiles/rocks") ||
+                                    name.equals("gfx/tiles/deep") ||
+                                    name.equals("gfx/tiles/odeep"))) {
                                 cells[i][j].val = 2;
                             }
-                        }
-                        else
-                        {
-                            if (name != null && !(name.startsWith("gfx/tiles/water") || name.startsWith("gfx/tiles/owater") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
+                        } else {
+                            if (name != null && !(name.startsWith("gfx/tiles/water") ||
+                                    name.startsWith("gfx/tiles/owater") ||
+                                    name.equals("gfx/tiles/deep") ||
+                                    name.equals("gfx/tiles/odeep"))) {
                                 cells[i][j].val = 2;
                             }
                         }
                     }
                 }
-            }
-        }
+
     }
 
     public ArrayList<Coord> checkCA(CellsArray ca) {

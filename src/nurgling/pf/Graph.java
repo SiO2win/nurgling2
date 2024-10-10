@@ -281,7 +281,7 @@ public class Graph implements Runnable
                             ArrayList<Coord> corners = new ArrayList<>();
                             for(Coord2d c2d : hbd.c)
                             {
-                                corners.add(Utils.toPfGrid(c2d).sub(map.begin));
+                                corners.add(Utils.toPfGrid(c2d).sub(map.getBegin()));
                             }
                             for(Coord datac : data)
                             {

@@ -100,14 +100,17 @@ public class PathFinder implements Action {
     public LinkedList<Graph.Vertex> construct(boolean test) throws InterruptedException {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0 && mul < 1000) {
+        while (path.isEmpty() && mul < 1000) {
             pfmap = new NPFMap(begin, end, mul);
 
             pfmap.waterMode = waterMode;
             pfmap.build();
-            CellsArray dca = null;
-            if (dummy != null)
-                dca = pfmap.addGob(dummy);
+
+            if (dummy != null) {
+                NHitBoxD nhbd = new NHitBoxD(dummy);
+                pfmap.push_segment(Utils.toPfGrid(nhbd.getCircumscribedUL()), Utils.toPfGrid(nhbd.getCircumscribedBR()));
+                pfmap.addGob(dummy);
+            }
 
             start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
             end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
@@ -117,9 +120,8 @@ public class PathFinder implements Action {
                 dn = true; //start == end
                 return null;
             }
+            pfmap.pull_segment();
 
-            if (dca != null)
-                pfmap.setCellArray(dca);
             NPFMap.print(pfmap.getSize(), pfmap.getCells());
             Graph res = null;
             if (pfmap.getCells()[end_pos.x][end_pos.y].val == 7) {
@@ -296,8 +298,8 @@ public class PathFinder implements Action {
         if (ca != null) {
             for (int i = 0; i < ca.x_len; i++)
                 for (int j = 0; j < ca.y_len; j++) {
-                    int ii = i + ca.begin.x - pfmap.begin.x;
-                    int jj = j + ca.begin.y - pfmap.begin.y;
+                    int ii = i + ca.begin.x - pfmap.getBegin().x;
+                    int jj = j + ca.begin.y - pfmap.getBegin().y;
                     Coord npfpos = new Coord(ii, jj);
                     if (ii > 0 && ii < pfmap.size && jj > 0 && jj < pfmap.size) {
                         if (ca.boolMask[i][j]) {

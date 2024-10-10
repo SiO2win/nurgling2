@@ -44,8 +44,7 @@ public class NGob {
             isDynamic = true;
         }
 
-        if (a instanceof GobIcon)
-        {
+        if (a instanceof GobIcon) {
             GobIcon gi = (GobIcon) a;
 //            String name = gi.icon().name();
         }
@@ -54,26 +53,24 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
                 if (((Drawable) a).getres().getLayers() != null) {
-                    for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
-                        if (lay instanceof Resource.Neg) {
-                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                    for (Resource.Layer lay : ((Drawable) a).getres().getLayers()){
+                            if (lay instanceof Resource.Neg) {
+                                hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                            } else if (lay instanceof Resource.Obstacle) {
+                                hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                if( hitBox != null)
+                                    break;
+                            }
                         }
-                        else if(lay instanceof Resource.Obstacle)
-                        {
-                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
-                        }
-                    }
                     if (name != null) {
-                        if(NStyle.iconMap.containsKey(name))
-                        {
+                        if (NStyle.iconMap.containsKey(name)) {
                             //TODO трюфель
-                            parent.setattr(new GobIcon(parent,NStyle.iconMap.get(name),new byte[0]));
+                            parent.setattr(new GobIcon(parent, NStyle.iconMap.get(name), new byte[0]));
                         }
 
                         if (NParser.checkName(name, new NAlias("plants"))) {
                             parent.addcustomol(new NCropMarker(parent));
-                        }
-                        else {
+                        } else {
                             if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
                                 switch (name) {
                                     case "gfx/terobjs/ladder":
@@ -111,8 +108,7 @@ public class NGob {
                     if (hitBox != null) {
                         if (NParser.checkName(name, new NAlias("gfx/terobjs/moundbed"))) {
                             hitBox = null;
-                        }
-                        else {
+                        } else {
                             if (ca == null) {
                                 setDynamic();
                                 parent.addcustomol(new NModelBox(parent));

@@ -101,13 +101,14 @@ public class NHitBox
             put("gfx/terobjs/dovecote", new NHitBox(new Coord(-7,-7),new Coord(7,7)));
         }
     };
-    static NHitBox fromObstacle(Coord2d[][] p)
-    {
-        if(p.length == 1 && p[0].length == 4)
-        {
-            return new NHitBox(p[0][0].floor(),p[0][2].ceil());
-        }
-        return null;
+    static NHitBox fromObstacle(Coord2d[][] p) {
+        if (p.length == 1 && p[0].length == 4) {
+            return new NHitBox(p[0][0].floor(), p[0][2].ceil());
+        } else if (p.length == 3) {
+            //TODO waterwheelhouse correctly?
+            return new NHitBox(p[1][0].floor(), p[1][2].ceil());
+        } else
+            return null;
     }
 
     public static NHitBox findCustom(String name)

@@ -2,6 +2,7 @@ package nurgling.pf;
 
 import haven.*;
 import nurgling.*;
+import java.util.Arrays;
 
 public class CellsArray {
     public Coord begin;
@@ -11,15 +12,16 @@ public class CellsArray {
     public int x_len;
     public int y_len;
 
-    public CellsArray copy(){
-        //TODO implement full copy
-        CellsArray theCopy = new CellsArray(x_len, y_len);
-        return theCopy;
-    }
-
-    public CellsArray copy(Coord clipUL,Coord clipBR){
-        //TODO implement clipped copy, null included
-        CellsArray theCopy = new CellsArray(x_len, y_len);
+    public CellsArray cloneClippedCA(Coord clipUL, Coord clipBR) {
+        Coord ul = Coord.of(Math.max(Math.min(clipUL.x, clipBR.x), begin.x), Math.max(Math.min(clipUL.y, clipBR.y), begin.y));
+        Coord br = Coord.of(Math.min(Math.max(clipUL.x, clipBR.x), end.x), Math.min(Math.max(clipUL.y, clipBR.y), end.y));
+        if (br.compareTo(ul) < 0)
+            return null;
+        CellsArray theCopy = new CellsArray(br.x - ul.x + 1, br.y - ul.y + 1);
+        for (int ix = Math.max(ul.x, begin.x) - begin.x; ix < Math.min(br.x, end.x) - end.x + x_len; ix++)
+            System.arraycopy(boolMask[ix], Math.max(ul.y, begin.y) - begin.y, theCopy.boolMask[ix - (Math.max(ul.x, begin.x) - begin.x)], 0, theCopy.y_len);
+        theCopy.begin = ul;
+        theCopy.end = br;
         return theCopy;
     }
 
