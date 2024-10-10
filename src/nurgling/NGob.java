@@ -3,12 +3,14 @@ package nurgling;
 import haven.*;
 import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
+import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
 import nurgling.nattrib.*;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
+import nurgling.widgets.NAlarmWdg;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
@@ -53,19 +55,38 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
                 if (((Drawable) a).getres().getLayers() != null) {
-                    for (Resource.Layer lay : ((Drawable) a).getres().getLayers()){
-                            if (lay instanceof Resource.Neg) {
-                                hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
-                            } else if (lay instanceof Resource.Obstacle) {
-                                hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
-                                if( hitBox != null)
-                                    break;
+                        if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
+                        {
+                            Consobj consobj = (Consobj) ((ResDrawable) a).spr;
+                            if((((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
+                                for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
+                                    if (lay instanceof Resource.Neg) {
+                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                    } else if (lay instanceof Resource.Obstacle) {
+                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
+                                if (lay instanceof Resource.Neg) {
+                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                } else if (lay instanceof Resource.Obstacle) {
+                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                    if( hitBox != null)
+                                        break;
+                                }
                             }
                         }
                     if (name != null) {
                         if (NStyle.iconMap.containsKey(name)) {
                             //TODO трюфель
                             parent.setattr(new GobIcon(parent, NStyle.iconMap.get(name), new byte[0]));
+                        }
+
+                        if (NParser.checkName(name, new NAlias("borka")) && parent.id!=NUtils.playerID()) {
+                            NAlarmWdg.addBorka(parent.id);
                         }
 
                         if (NParser.checkName(name, new NAlias("plants"))) {

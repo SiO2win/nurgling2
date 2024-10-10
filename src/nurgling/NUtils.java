@@ -1,12 +1,10 @@
 package nurgling;
 
 import haven.*;
+import haven.Button;
 import haven.Window;
-import haven.res.gfx.hud.rosters.cow.Ochs;
-import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
-import mapv4.MappingClient;
 import mapv4.StatusWdg;
 import nurgling.areas.*;
 import nurgling.tasks.*;
@@ -299,7 +297,8 @@ public class NUtils
     }
 
     public static void addTask(NTask task) throws InterruptedException {
-        NUtils.getUI().core.addTask(task);
+        if(NUtils.getUI()!=null)
+            NUtils.getUI().core.addTask(task);
     }
 
     public static void setQuestConds(int id, Object... args)
@@ -381,12 +380,18 @@ public class NUtils
 
     public static void EnterGrid(Coord gc) {
         ((NMapView)NUtils.getGameUI().map).lastGC = gc;
-        if ((Boolean) NConfig.get(NConfig.Key.autoMapper) && (Boolean) NConfig.get(NConfig.Key.automaptrack)) {
-            MappingClient.getInstance().EnterGrid(gc);
-        }
         if (NUtils.getGameUI().areas.visible) {
             ((NMapView) NUtils.getGameUI().map).destroyDummys();
             ((NMapView) NUtils.getGameUI().map).initDummys();
+        }
+    }
+
+    public static void startBuild(Window window) {
+        for (Widget sp = window.lchild; sp != null; sp = sp.prev) {
+            if (sp instanceof Button) {
+                if(((Button) sp).text!=null && ((Button) sp).text.text.equals("Build"))
+                    ((Button) sp).click();
+            }
         }
     }
 }
