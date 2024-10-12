@@ -22,17 +22,7 @@ public class CellType {
     public static final CellType ForestFloor = new CellType((byte) -1, (byte) -1, 0.6);
     public static final CellType SubmergedFloor = new CellType((byte) -1, (byte) -1, 0.2);
 
-    public static final CellType Default = new CellType();
-
-    CellType() {
-        landType = 0;
-        obstructionState = 0;
-        speedK = 1;
-        includeWater = false;
-        includeLand = false;
-        pfVisited = false;
-        caLayed = false;
-    }
+    CellType() {}
 
     CellType(byte land, byte obstruct, double moveSpeed) {
         landType = land;
@@ -91,7 +81,7 @@ public class CellType {
     private boolean includeLand = false;
     private boolean pfVisited = false;
     private boolean caLayed = false;
-    private byte landType;
+    private byte landType = 0;
     //0 walkable
     //1 bog
     //2 shallow
@@ -100,13 +90,13 @@ public class CellType {
     //5 deep ocean
     //6 open sea
 
-    private byte obstructionState;
+    private byte obstructionState = 0;
     //0 passable & placeable
     //1 non-placeable
     //2 blocked by hit-box
     //3 blocked by immovable object
 
-    private double speedK;
+    private double speedK = 1;
 
     public Color getClr() {
         switch (obstructionState) {

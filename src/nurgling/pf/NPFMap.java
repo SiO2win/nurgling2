@@ -12,13 +12,6 @@ public class NPFMap
 {
     public boolean waterMode = false;
     public Cell[][] cells;
-    // 0 have path
-    // 1 hitbox
-    // 2 unpathable tiles
-    // 4 pf been here
-    // 7 approach point (marked blue)
-    // 8 pf line
-    // 9 pf turn
 
     private final Coord begin;
     private final Coord end;
@@ -78,6 +71,13 @@ public class NPFMap
         public Coord pos;
 
         public short val;
+        // 0 have path
+        // 1 hitbox
+        // 2 unpathable tiles
+        // 4 pf been here
+        // 7 approach point (marked blue)
+        // 8 pf line
+        // 9 pf turn
         public CellType fullVal = new CellType();
 
         public ArrayList<Long> content = new ArrayList<>();
@@ -163,11 +163,11 @@ public class NPFMap
                     else if (name.startsWith("gfx/tiles/owater"))
                         type = CellType.ShallowOcean;
                     else
-                        type = CellType.Default;
+                        type = null;
 
 
 
-                    if (type != CellType.Default) {
+                    if (type != null) {
                         Coord tileCenter = Utils.tileToPf(tile_cursor);
                         Coord fpTilePart;
                         for (int di = -1; di <= 1; di++)
