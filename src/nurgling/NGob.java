@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import haven.render.Location;
+import haven.render.Transform;
 import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
 import haven.res.gfx.terobjs.consobj.Consobj;
@@ -54,17 +56,47 @@ public class NGob {
         if (a instanceof Drawable) {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
+
+                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor")) {
+                    return;
+                }
+
                 if (((Drawable) a).getres().getLayers() != null) {
-                        if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
+                    if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
                         {
                             Consobj consobj = (Consobj) ((ResDrawable) a).spr;
-                            if((((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
+                            if(consobj.built!=null && (((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
                                 for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
                                     if (lay instanceof Resource.Neg) {
                                         hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
                                     } else if (lay instanceof Resource.Obstacle) {
                                         hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
                                     }
+                                }
+                            }
+                            else
+                            {
+                                Coord2d ur = null;
+                                Coord2d bl = null;
+                                for(Location loc: consobj.poles)
+                                {
+                                    if(bl == null) {
+                                        bl = new Coord2d(((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12],((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]);
+                                    }
+                                    else
+                                    {
+                                        bl = new Coord2d(Math.min(bl.x,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12]),Math.min(bl.y,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]));
+                                    }
+                                    if(ur == null) {
+                                        ur = new Coord2d(((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12],((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]);
+                                    }
+                                    else
+                                    {
+                                        ur = new Coord2d(Math.max(ur.x,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12]),Math.max(ur.y,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]));
+                                    }
+                                }
+                                if(bl!=null && ur!=null) {
+                                    hitBox = new NHitBox(bl, ur);
                                 }
                             }
                         }

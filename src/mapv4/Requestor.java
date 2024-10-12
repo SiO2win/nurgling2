@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -95,6 +94,12 @@ public class Requestor implements Action {
                         if(g != null && NUtils.getGameUI().map.glob != null) {
                             try {
                             BufferedImage image = MinimapImageGenerator.drawmap(NUtils.getGameUI().map.glob.map, g);
+                            if(image == null) {
+                                synchronized ( list ) {
+                                    list.add(task);
+                                }
+                                continue;
+                            }
                             JSONObject extraData = new JSONObject();
                             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                             ImageIO.write(image, "png", outputStream);
@@ -194,7 +199,7 @@ public class Requestor implements Action {
                                 Coord mgc = new Coord(Math.floorDiv(m.tc.x, 100), Math.floorDiv(m.tc.y, 100));
                                 MapFile.Segment.ByCoord indirGrid = (MapFile.Segment.ByCoord)mapfile.segments.get(m.seg).grid(mgc);
                                 return new MarkerData(m, indirGrid);
-                            }).toList();
+                            }).collect(Collectors.toList());
                             mapfile.lock.readLock().unlock();
                             ArrayList<JSONObject> loadedMarkers = new ArrayList<>();
                             for (MarkerData md : markers)

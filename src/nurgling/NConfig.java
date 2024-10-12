@@ -50,13 +50,27 @@ public class NConfig
         showGrid,
         showView,
         disableWinAnim,
+        disableMenugridKeys,
         crime,
         tracking,
         swimming,
         debug,
         claydiggerprop,
         miningol,
-        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, autoMapper, endpoint, automaptrack, unloadgreen, showInventoryNums, hidecredo
+        q_pattern,
+        q_range,
+        q_visitor,
+        q_door,
+        petals,
+        singlePetal,
+        asenable,
+        autoMapper,
+        endpoint,
+        automaptrack,
+        unloadgreen,
+        showInventoryNums,
+        hidecredo,
+        chipperprop
     }
 
 
@@ -83,6 +97,7 @@ public class NConfig
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
+        conf.put(Key.disableMenugridKeys, false);
         conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
         conf.put(Key.miningol,true);
         conf.put(Key.crime,false);
@@ -223,6 +238,9 @@ public class NConfig
                             break;
                         case "NChopperProp":
                             res.add(new NChopperProp(obj));
+                            break;
+                        case "NChipperProp":
+                            res.add(new NChipperProp(obj));
                             break;
                         case "NPrepBProp":
                             res.add(new NPrepBlocksProp(obj));

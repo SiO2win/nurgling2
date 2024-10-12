@@ -47,7 +47,7 @@ public class PathFinder implements Action {
 
             if (path != null) {
                 boolean needRestart = false;
-                NUtils.getGameUI().msg(Utils.pfToWorld(path.getLast().pos).toString());
+//                NUtils.getGameUI().msg(Utils.pfToWorld(path.getLast().pos).toString());
                 //TODO syntetic points
                 for (Graph.Vertex vert : path) {
                     Coord2d targetCoord = Utils.pfToWorld(vert.pos);
@@ -77,10 +77,12 @@ public class PathFinder implements Action {
                         if(Math.abs(targetCoord.x-dummy.rc.x)<4)
                         {
                             targetCoord.x=dummy.rc.x;
+                            targetCoord.y+=dummy.rc.y-targetCoord.y>0?-2:2;
                         }
                         if(Math.abs(targetCoord.y-dummy.rc.y)<4)
                         {
                             targetCoord.y=dummy.rc.y;
+                            targetCoord.x+=dummy.rc.x-targetCoord.x>0?-2:2;
                         }
                     }
 
@@ -200,6 +202,19 @@ public class PathFinder implements Action {
 //        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0) {
             end_poses = findFreeNear(end_pos, false);
+            if(dummy!=null)
+            {
+                ArrayList<Coord> best_poses = new ArrayList<>();
+                for(Coord coord : end_poses)
+                {
+                    Coord2d coord2d = Utils.pfToWorld(cells[coord.x][coord.y].pos);
+                    if(coord2d.x+MCache.tileqsz.x > dummy.rc.x && coord2d.x-MCache.tileqsz.x< dummy.rc.x ||
+                            coord2d.y+MCache.tileqsz.y > dummy.rc.y && coord2d.y-MCache.tileqsz.y< dummy.rc.y)
+                        best_poses.add(coord);
+                }
+                if(!best_poses.isEmpty())
+                    end_poses = best_poses;
+            }
             for (Coord coord : end_poses) {
                 if (start_pos.equals(coord) && target_id >= 0)
                     return false;
