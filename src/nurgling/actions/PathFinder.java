@@ -47,10 +47,10 @@ public class PathFinder implements Action {
 
             if (path != null) {
                 boolean needRestart = false;
-                NUtils.getGameUI().msg(Utils.pfGridToWorld(path.getLast().pos).toString());
+                NUtils.getGameUI().msg(Utils.pfToWorld(path.getLast().pos).toString());
                 //TODO syntetic points
                 for (Graph.Vertex vert : path) {
-                    Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
+                    Coord2d targetCoord = Utils.pfToWorld(vert.pos);
 //                    if (vert == path.getFirst()) {
 //                        Coord2d playerrc = NUtils.player().rc;
 //                        double dx, dy;
@@ -119,12 +119,12 @@ public class PathFinder implements Action {
 
             if (dummy != null) {
                 NHitBoxD nhbd = new NHitBoxD(dummy);
-                pfmap.push_segment(Utils.toPfGrid(nhbd.getCircumscribedUL()), Utils.toPfGrid(nhbd.getCircumscribedBR()));
+                pfmap.push_segment(Utils.worldToPf(nhbd.getCircumscribedUL()), Utils.worldToPf(nhbd.getCircumscribedBR()));
                 pfmap.addGob(dummy);
             }
 
-            start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
-            end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
+            start_pos = Utils.worldToPf(begin).sub(pfmap.getBegin());
+            end_pos = Utils.worldToPf(end).sub(pfmap.getBegin());
             // Находим свободные начальные и конечные точки
 
             if (!fixStartEnd(test)) {
@@ -216,7 +216,7 @@ public class PathFinder implements Action {
     public static Comparator<Coord> c_comp = new Comparator<Coord>() {
         @Override
         public int compare(Coord o1, Coord o2) {
-            return Double.compare(Utils.pfGridToWorld(o1).dist(NUtils.getGameUI().map.player().rc), Utils.pfGridToWorld(o2).dist(NUtils.getGameUI().map.player().rc));
+            return Double.compare(Utils.pfToWorld(o1).dist(NUtils.getGameUI().map.player().rc), Utils.pfToWorld(o2).dist(NUtils.getGameUI().map.player().rc));
         }
     };
 
@@ -322,7 +322,7 @@ public class PathFinder implements Action {
                                             pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
                                             res.add(test_coord);
                                         } else if (pfmap.cells[npfpos.x][npfpos.y].content.size() > 1) {
-                                            Coord2d test2d_coord = Utils.pfGridToWorld(pfmap.cells[test_coord.x][test_coord.y].pos);
+                                            Coord2d test2d_coord = Utils.pfToWorld(pfmap.cells[test_coord.x][test_coord.y].pos);
                                             double dst = 9000, testdst;
                                             long res_id = -2;
                                             for (long id : pfmap.cells[npfpos.x][npfpos.y].content) {
@@ -358,8 +358,8 @@ public class PathFinder implements Action {
             Comparator comp = new Comparator<Coord>() {
                 @Override
                 public int compare(Coord o1, Coord o2) {
-                    Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc).norm();
-                    Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc).norm();
+                    Coord2d t01 = Utils.pfToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc).norm();
+                    Coord2d t02 = Utils.pfToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc).norm();
 
                     return Double.compare(t02.dot(playerdir), t01.dot(playerdir));
                 }

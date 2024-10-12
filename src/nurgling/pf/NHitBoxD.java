@@ -44,7 +44,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public NHitBoxD(Coord ul, Coord br) {
-        this(Utils.pfGridToWorld(ul).sub(MCache.tileqsz), Utils.pfGridToWorld(br).add(MCache.tileqsz));
+        this(Utils.pfToWorld(ul).sub(MCache.tileqsz), Utils.pfToWorld(br).add(MCache.tileqsz));
     }
 
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r) {
@@ -75,7 +75,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
 
     public void setUnitSquare(Coord newRC) {
         primitive = true;
-        this.setOrtho(MCache.tileqsz.sub(MCache.tilehsz), MCache.tileqsz, Utils.pfGridToWorld(newRC), 0);
+        this.setOrtho(MCache.tileqsz.sub(MCache.tilehsz), MCache.tileqsz, Utils.pfToWorld(newRC), 0);
     }
 
     public void setUnitSquare(Coord2d newUL) {

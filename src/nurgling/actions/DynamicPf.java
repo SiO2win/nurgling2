@@ -3,7 +3,6 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
-import haven.MCache;
 import nurgling.NGameUI;
 import nurgling.NHitBox;
 import nurgling.NUtils;
@@ -13,15 +12,12 @@ import nurgling.pf.NPFMap;
 import nurgling.pf.Utils;
 import nurgling.tasks.DynMovingCompleted;
 import nurgling.tasks.IsMoving;
-import nurgling.tasks.MovingCompleted;
 import nurgling.tasks.WaitPath;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.OCache.posres;
-import static nurgling.actions.PathFinder.pfmdelta;
 
 public class DynamicPf implements Action
 {
@@ -78,7 +74,7 @@ public class DynamicPf implements Action
             LinkedList<Graph.Vertex> path = wpf.path;
             updatePath(path, wpf,target);
             while (!path.isEmpty()) {
-                Coord2d targetCoord = Utils.pfGridToWorld(path.pop().pos);
+                Coord2d targetCoord = Utils.pfToWorld(path.pop().pos);
                 gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
                 IsMoving im;
                 NUtils.getUI().core.addTask(im = new IsMoving(targetCoord, 20));
@@ -109,7 +105,7 @@ public class DynamicPf implements Action
             int shift = 1;
             while (shift < path.size()) {
                 Coord2d first = NUtils.player().rc;
-                Coord2d second = Utils.pfGridToWorld(path.get(shift).pos);
+                Coord2d second = Utils.pfToWorld(path.get(shift).pos);
                 Coord2d fsdir = second.sub(first);
                 Coord2d center = fsdir.div(2).add(first);
                 int hlen = (int) Math.ceil(fsdir.len() / 2);

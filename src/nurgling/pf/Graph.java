@@ -17,7 +17,7 @@ public class Graph implements Runnable
         {
             for (int j = 0; j < size; j++)
             {
-                vert[i][j] = new Vertex(map.getCells()[i][j].pos, map.getCells()[i][j].val);
+                vert[i][j] = new Vertex(map.getCells()[i][j].pos, map.getCells()[i][j].fullVal);
                 Coord c = new Coord(i, j);
                 vert[i][j].dist = c.dist(end);
                 vert[i][j].i = i;
@@ -263,8 +263,8 @@ public class Graph implements Runnable
                 for (int i = -1; i < path.size(); i++) {
                     int di = 0;
                     while (i + shift < path.size()) {
-                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos) : NUtils.player().rc;
-                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos);
+                        Coord2d first = (i != -1) ? Utils.pfToWorld(path.get(i).pos) : NUtils.player().rc;
+                        Coord2d second = Utils.pfToWorld(path.get(i + shift).pos);
                         Coord2d fsdir = second.sub(first);
                         Coord2d center = fsdir.div(2).add(first);
                         int hlen = (int) Math.ceil(fsdir.len() / 2);
@@ -281,7 +281,7 @@ public class Graph implements Runnable
                             ArrayList<Coord> corners = new ArrayList<>();
                             for(Coord2d c2d : hbd.c)
                             {
-                                corners.add(Utils.toPfGrid(c2d).sub(map.getBegin()));
+                                corners.add(Utils.worldToPf(c2d).sub(map.getBegin()));
                             }
                             for(Coord datac : data)
                             {
@@ -322,7 +322,7 @@ public class Graph implements Runnable
                     }
                 }
                 path.removeAll(for_remove);
-                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
+                if (player != null && Utils.pfToWorld(path.get(0).pos).dist(player.rc) <= 1)
                     path.remove(0);
             }
         return path;
@@ -336,10 +336,10 @@ public class Graph implements Runnable
         public int i;
         public int j;
 
-        public Vertex(Coord pos, short val)
+        public Vertex(Coord pos, CellType cellState)
         {
             super(pos);
-            this.val = (val == 7) ? 0 : val;
+            this.fullVal.copy(cellState);
         }
     }
 

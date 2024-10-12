@@ -26,6 +26,8 @@
 
 package haven;
 
+import haven.render.sl.InstancedUniform;
+
 import static java.lang.Math.PI;
 import java.util.Iterator;
 
@@ -81,12 +83,13 @@ public class Coord implements Comparable<Coord>, java.io.Serializable {
     }
 
     public int compareTo(Coord c) {
-	if(c.y != y)
-	    return(c.y - y);
-	if(c.x != x)
-	    return(c.x - x);
-	return(0);
-    }
+		if (c.y != y)
+			return (c.y - y);
+		return Integer.compare(c.x, x);
+	}
+	public boolean lessEqThen(Coord c) {
+		return ((c.y >= y) && (c.x >= x));
+	}
 
     public int hashCode() {
 	return(((y & 0xffff) * 31) + (x & 0xffff));

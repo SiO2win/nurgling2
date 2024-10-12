@@ -2,7 +2,6 @@ package nurgling.pf;
 
 import haven.*;
 import nurgling.*;
-import java.util.Arrays;
 
 public class CellsArray {
     public Coord begin;
@@ -37,8 +36,8 @@ public class CellsArray {
 
     public CellsArray(NHitBox hb, double angl, Coord2d rc) {
         NHitBoxD objToApproach = new NHitBoxD(hb.begin, hb.end, rc, angl);
-        begin = Utils.toPfGrid(objToApproach.getCircumscribedUL());
-        end = Utils.toPfGrid(objToApproach.getCircumscribedBR());
+        begin = Utils.worldToPf(objToApproach.getCircumscribedUL());
+        end = Utils.worldToPf(objToApproach.getCircumscribedBR());
         NHitBoxD tile = new NHitBoxD(begin);
         x_len = end.x - begin.x + 1;
         y_len = end.y - begin.y + 1;

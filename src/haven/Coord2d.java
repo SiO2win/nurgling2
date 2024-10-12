@@ -78,6 +78,9 @@ public class Coord2d implements Comparable<Coord2d>, java.io.Serializable {
 	if(c.y > y) return(1);
     return Double.compare(c.x, x);
     }
+    public boolean lessEqThen(Coord2d c) {
+        return ((c.y >= y) && (c.x >= x));
+    }
 
     public Coord2d add(double X, double Y) {
 	return(of(x + X, y + Y));
