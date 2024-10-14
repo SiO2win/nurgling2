@@ -112,12 +112,11 @@ public class PathFinder implements Action {
 
     public LinkedList<Graph.Vertex> construct(boolean test) throws InterruptedException {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
-        int mul = 1;
+        double mul = 1;
         while (path.isEmpty() && mul < 1000) {
             pfmap = new NPFMap(begin, end, mul);
 
-            pfmap.waterMode = waterMode;
-            pfmap.build();
+            pfmap.build(PFRegime.Walking);
 
             if (dummy != null) {
                 NHitBoxD nhbd = new NHitBoxD(dummy);
@@ -180,14 +179,14 @@ public class PathFinder implements Action {
                     return path;
                 }
             }
-            mul++;
+            mul *= 1.6;
         }
         return null;
     }
 
     private boolean fixStartEnd(boolean test) {
         NPFMap.Cell[][] cells = pfmap.getCells();
-        if (cells[start_pos.x][start_pos.y].val != 0) {
+        if (cells[start_pos.x][start_pos.y].fullVal.isBlocked()) {
             if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
                 return false;
             ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
@@ -199,8 +198,8 @@ public class PathFinder implements Action {
             dn = true;
             return false;
         }
-//        cells[start_pos.x][start_pos.y].val = 7;
-        if (cells[end_pos.x][end_pos.y].val != 0) {
+        cells[start_pos.x][start_pos.y].fullVal.tgtCandidate = true;
+        if (cells[end_pos.x][end_pos.y].fullVal.isBlocked()) {
             end_poses = findFreeNear(end_pos, false);
             if(dummy!=null)
             {
@@ -218,11 +217,11 @@ public class PathFinder implements Action {
             for (Coord coord : end_poses) {
                 if (start_pos.equals(coord) && target_id >= 0)
                     return false;
-                cells[coord.x][coord.y].val = 7;
+                cells[coord.x][coord.y].fullVal.tgtCandidate = true;
             }
 
         } else {
-            cells[end_pos.x][end_pos.y].val = 7;
+            cells[end_pos.x][end_pos.y].fullVal.tgtCandidate = true;
         }
         return true;
     }
@@ -291,7 +290,7 @@ public class PathFinder implements Action {
     private void checkAndAdd(Coord pos, ArrayList<Coord> coords, AtomicBoolean check) {
         //debug method
         if (pfmap.getCells()[pos.x][pos.y].val == 0) {
-            pfmap.getCells()[pos.x][pos.y].val = 7;
+            pfmap.getCells()[pos.x][pos.y].fullVal.tgtCandidate = true;
             coords.add(pos);
         } else if (target_id != -2 && check != null) {
             if (!pfmap.getCells()[pos.x][pos.y].content.contains(target_id))
@@ -334,7 +333,7 @@ public class PathFinder implements Action {
                                 if (test_coord.x < pfmap.size && test_coord.x >= 0 && test_coord.y < pfmap.size && test_coord.y >= 0)
                                     if (pfmap.cells[test_coord.x][test_coord.y].val == 0 || pfmap.cells[test_coord.x][test_coord.y].val == 7) {
                                         if (isStart || pfmap.cells[npfpos.x][npfpos.y].content.size() == 1) {
-                                            pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
+                                            pfmap.getCells()[test_coord.x][test_coord.y].fullVal.tgtCandidate = true;
                                             res.add(test_coord);
                                         } else if (pfmap.cells[npfpos.x][npfpos.y].content.size() > 1) {
                                             Coord2d test2d_coord = Utils.pfToWorld(pfmap.cells[test_coord.x][test_coord.y].pos);
@@ -353,7 +352,7 @@ public class PathFinder implements Action {
                                                     }
                                                 }
                                                 if (res_id == target_id) {
-                                                    pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
+                                                    pfmap.getCells()[test_coord.x][test_coord.y].fullVal.tgtCandidate = true;
                                                     res.add(test_coord);
                                                 }
                                             }

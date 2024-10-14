@@ -76,6 +76,7 @@ public class CellType {
 
 //        private byte overlayColor=-1;
 //        private byte landColor=-1;
+    public boolean tgtCandidate = false;
 
     private boolean includeWater = false;
     private boolean includeLand = false;
@@ -144,6 +145,10 @@ public class CellType {
     }
 
     public boolean isPlace_able() {
+        return ((landType == 0) && (obstructionState < 1) && !includeWater);
+    }
+
+    public boolean isPassable(PFRegime rg) {
         return ((landType == 0) && (obstructionState < 1) && !includeWater);
     }
 

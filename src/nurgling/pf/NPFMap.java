@@ -127,7 +127,8 @@ public class NPFMap
         return size;
     }
 
-    public void build() {
+    public void build(PFRegime rg) {
+        //TODO implement rg usage
         if (NUtils.playerID() != -1) {
             Following fl = NUtils.player().getattr(Following.class);
             if (fl != null)
@@ -147,20 +148,21 @@ public class NPFMap
             for ( tile_cursor.y = start_tile.y; tile_cursor.y <= end_tile.y; tile_cursor.y++) {
                 String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(tile_cursor));
                 CellType type;
+
                 if (name != null) {
-                    if (name.startsWith("gfx/tiles/cave"))
+                    if (name.endsWith("/cave"))
                         type = CellType.Forbidden;
-                    else if (name.startsWith("gfx/tiles/rocks"))
+                    else if (name.endsWith("/rocks"))
                         type = CellType.Forbidden;
                     else if (name.equals("gfx/tiles/lava"))
                         type = CellType.Forbidden;
-                    else if (name.startsWith("gfx/tiles/deep"))
+                    else if (name.endsWith("/deep"))
                         type = CellType.Deep;
-                    else if (name.startsWith("gfx/tiles/odeep"))
+                    else if (name.endsWith("/odeep"))
                         type = CellType.DeepOcean;
-                    else if (name.startsWith("gfx/tiles/water"))
+                    else if (name.endsWith("/water"))
                         type = CellType.Shallow;
-                    else if (name.startsWith("gfx/tiles/owater"))
+                    else if (name.endsWith("/owater"))
                         type = CellType.ShallowOcean;
                     else
                         type = null;

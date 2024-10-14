@@ -7,6 +7,7 @@ import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.pf.NPFMap;
+import nurgling.pf.PFRegime;
 import nurgling.tasks.ChangeModelAtrib;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -30,7 +31,7 @@ public class TESTLiftDrop extends Test
     {
         long start =System.currentTimeMillis();
         NPFMap pfmap = new NPFMap(NUtils.player().rc.sub(new Coord2d(100,100)), NUtils.player().rc.add(new Coord2d(100,100)), 1.2);
-        pfmap.build();
+        pfmap.build(PFRegime.Walking);
         NUtils.getGameUI().msg("Build time in ms:" + String.valueOf(System.currentTimeMillis() - start));
         NPFMap.print(pfmap.getSize(), pfmap.getCells());
 //        new AutoEater().run(gui);

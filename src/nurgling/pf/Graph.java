@@ -62,13 +62,13 @@ public class Graph implements Runnable
         {
             if (v.j > 0)
             {
-                if ((vert[v.i][v.j - 1].val & 3) == 0 && (vert[v.i - 1][v.j].val & 3) == 0)
+                if (!(vert[v.i][v.j - 1].fullVal.isBlocked())  && !(vert[v.i - 1][v.j].fullVal.isBlocked()))
                     check(vert[v.i - 1][v.j - 1]);
             }
             check(vert[v.i - 1][v.j]);
             if (v.j < size - 1)
             {
-                if ((vert[v.i][v.j + 1].val & 3) == 0 && (vert[v.i - 1][v.j].val & 3) == 0)
+                if (!(vert[v.i][v.j + 1].fullVal.isBlocked())  && !(vert[v.i - 1][v.j].fullVal.isBlocked()) )
                     check(vert[v.i - 1][v.j + 1]);
             }
         }
